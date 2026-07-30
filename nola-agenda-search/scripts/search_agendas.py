@@ -108,13 +108,16 @@ def calendar_meetings(lookback_days, horizon_days):
     lo, hi = today - dt.timedelta(days=lookback_days), today + dt.timedelta(days=horizon_days)
     rows = []
     for item in re.findall(r"<item>(.*?)</item>", xml, re.S):
-        title = re.search(r"<title><!\[CDATA\[(.*?)\]\]>", item).group(1)
-        pub = re.search(r"<pubDate>(.*?)</pubDate>", item).group(1)
-        link = re.search(r"<link><!\[CDATA\[(.*?)\]\]>", item).group(1)
-        when = email.utils.parsedate_to_datetime(pub)  # meeting start, GMT
+        title_m = re.search(r"<title><!\[CDATA\[(.*?)\]\]>", item)
+        pub_m = re.search(r"<pubDate>(.*?)</pubDate>", item)
+        link_m = re.search(r"<link><!\[CDATA\[(.*?)\]\]>", item)
+        if not (title_m and pub_m and link_m):
+            continue  # malformed/unexpected item shape - skip rather than crash the sweep
+        when = email.utils.parsedate_to_datetime(pub_m.group(1))  # meeting start, GMT
         if lo <= when.date() <= hi:
+            title = re.sub(r"\s+", " ", title_m.group(1)).strip()
             rows.append({"date": when.date(), "start_utc": when.isoformat(),
-                         "title": title.strip(), "url": link.replace("?feed=events", ""),
+                         "title": title, "url": link_m.group(1).replace("?feed=events", ""),
                          "hits": {}, "sources": []})
     return sorted(rows, key=lambda r: r["date"])
 
@@ -223,7 +226,12 @@ def main():
             mtg["sources"].append("agenda")
 
     # --- Legistar regular-meeting agendas; merge hits by date ---
-    by_date = {m["date"]: m for m in meetings if "Regular" in m["title"] or "Budget" in m["title"]}
+    # Keyed by date -> list, since Regular Meetings and Budget hearings can
+    # both land on the same date (a single dict entry would silently drop one).
+    by_date = {}
+    for m in meetings:
+        if "Regular" in m["title"] or "Budget" in m["title"]:
+            by_date.setdefault(m["date"], []).append(m)
     for ev in legistar_events(args.lookback_days, args.horizon_days):
         date = dt.date.fromisoformat(ev["EventDate"][:10])
         blobs = []
@@ -243,16 +251,16 @@ def main():
             merge_hits(hits, find_hits(text, patterns))
         if not hits:
             continue
-        mtg = by_date.get(date)
-        if mtg is None:
+        candidates = by_date.get(date)
+        if not candidates:
             mtg = {"date": date, "start_utc": None, "title": f"City Council {ev.get('EventTime') or ''}".strip(),
                    "url": ev.get("EventInSiteURL", ""), "hits": {}, "sources": []}
             meetings.append(mtg)
-        merge_hits(mtg["hits"], hits)
-        if "legistar" not in mtg["sources"]:
-            mtg["sources"].append("legistar")
-
-    matched = sorted((m for m in meetings if m["hits"]), key=lambda m: m["date"])
+            candidates = [mtg]
+        for mtg in candidates:
+            merge_hits(mtg["hits"], hits)
+            if "legistar" not in mtg["sources"]:
+                mtg["sources"].append("legistar")
 
     # Legistar stores one snapshot per agenda appearance, so a held ordinance
     # shows up once per meeting it was on. Collapse by CAL. NO., keeping the
@@ -268,6 +276,28 @@ def main():
         else:
             seen_cal[key] = set(kws)
             matters.append((m, seen_cal[key]))
+
+    # A pending Matter's MatterAgendaDate can name a future meeting it's
+    # slated for even when that meeting's agenda hasn't been published yet
+    # (so the full-text sweep above found nothing there). Surface those into
+    # the meeting's hits too, so they show up in meeting_matches and get
+    # calendared in Step 2 instead of only appearing as a legislation match.
+    today_date = dt.date.today()
+    for m, kws in matters:
+        ad = (m.get("MatterAgendaDate") or "")[:10]
+        try:
+            ad_date = dt.date.fromisoformat(ad)
+        except ValueError:
+            continue
+        if ad_date < today_date:
+            continue
+        for mtg in by_date.get(ad_date, []):
+            title = re.sub(r"\s+", " ", (m.get("MatterTitle") or ""))
+            mtg["hits"].setdefault(f"legislation:{m.get('MatterFile')}", [title[:220]])
+            if "legislation" not in mtg["sources"]:
+                mtg["sources"].append("legislation")
+
+    matched = sorted((m for m in meetings if m["hits"]), key=lambda m: m["date"])
 
     # --- Report (matches only unless --verbose) ---
     today = dt.date.today().isoformat()

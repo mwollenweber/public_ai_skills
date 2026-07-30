@@ -42,19 +42,28 @@ the script, continue.
 
 ## Step 2 — Calendar matched meetings (upcoming only)
 
-For each entry in `meeting_matches` in the JSON whose date is today or later:
+`meeting_matches` includes both meetings matched by full agenda text AND
+pending legislation whose `MatterAgendaDate` names a today-or-later meeting
+(merged in under a `legislation:<file>` hit key even when that meeting's own
+agenda isn't published yet) — the script does this merge itself, so treat
+every entry in `meeting_matches` the same way.
 
-1. Check the user's Google Calendar for an existing event that day matching
-   the meeting title (search/list events) — never create duplicates on
-   re-runs.
-2. If absent, create the event: title `NOLA Council: <meeting title>`,
-   start from `start_utc` (convert to America/Chicago; council meetings are
-   typically 1.5–3 h, default 2 h), description containing the matched
-   keywords, a hit snippet or two, and the meeting-page URL.
+For each entry in `meeting_matches` whose date is today or later, ALWAYS
+check the user's Google Calendar first (search/list events for that day) —
+never skip this check:
 
-Past meetings and legislation matches don't get calendar events. If no
-calendar tool is available, say so and give the user the meeting details to
-add manually.
+1. Look for an existing event that day matching the meeting title.
+2. If absent, create it: title `NOLA Council: <meeting title>`, start from
+   `start_utc` (convert to America/Chicago; council meetings are typically
+   1.5–3 h, default 2 h), description containing the matched keywords, a hit
+   snippet or note for each agenda item/legislation match (e.g. calendar
+   number and brief), and the meeting-page URL plus any legislation link.
+3. If an event already exists but is missing a hit that's now present
+   (e.g. a new legislation match landed on an already-calendared date),
+   update its description rather than skipping it.
+
+Only past meetings are excluded from calendaring. If no calendar tool is
+available, say so and give the user the meeting details to add manually.
 
 ## Step 3 — Alert + summary
 
