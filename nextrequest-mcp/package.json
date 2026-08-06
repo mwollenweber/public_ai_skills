@@ -1,0 +1,20 @@
+{
+  "name": "nextrequest-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for NextRequest public records portals (read + optional message writes)",
+  "type": "module",
+  "bin": { "nextrequest-mcp": "dist/index.js" },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "@types/node": "^22.0.0"
+  }
+}
