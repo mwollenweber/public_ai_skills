@@ -17,3 +17,10 @@ Sweeps New Orleans City Council and committee agendas, plus pending Legistar leg
 Sends Louisiana-law demand notices for overdue public records requests on nola.nextrequest.com. It filters your open requests, verifies each one is genuinely past due against the live on-page due date (the list view is often stale), skips requests where staff are waiting on you or payment is the open issue, then posts a statutory demand citing La. R.S. 44:1 et seq. and 44:35 via "Message agency" — with a confirmation step before anything public goes out.
 
 **Use it:** ask Claude "send demand letters for my overdue NextRequest requests" or "which of my NOLA records requests are past due? escalate them." Requires browser tools and a signed-in NextRequest requester session.
+
+
+### [monthly-surveillance-recap](monthly-surveillance-recap/)
+
+Writes a monthly "[Month] [Year] in Review" recap post for a surveillance-accountability blog. Gathers everything the month left a trace of — WordPress posts, NextRequest filings and agency responses, complaint PDFs in Drive, Instagram posts, and repo commits — then drafts a short, chronological, link-dense post and runs a verification pass over every date, number, and case ID before anything is published.
+
+**Use it:** ask Claude "write my August in review" or "draft the monthly recap." Requires browser tools with signed-in sessions for NextRequest, Google Drive, Instagram, and WordPress.
