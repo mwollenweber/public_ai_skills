@@ -18,6 +18,17 @@ Sends Louisiana-law demand notices for overdue public records requests on nola.n
 
 **Use it:** ask Claude "send demand letters for my overdue NextRequest requests" or "which of my NOLA records requests are past due? escalate them." Requires browser tools and a signed-in NextRequest requester session.
 
+### [nopd-monthly-records-requests](nopd-monthly-records-requests/)
+
+Runbook for the monthly batch of NOPD public records requests on nola.nextrequest.com — Project NOLA communications, facial recognition and surveillance forms (NOPD Forms 357/360), LA-SAFE requests for information, and drone flight logs. It pulls each template from Google Drive, swaps in the previous calendar month's date range, fills the form (injecting the description into the Quill editor, since typing it is unreliable), verifies the fields, and submits one request at a time after approval, then logs the request numbers.
+
+**Use it:** ask Claude "file this month's NOPD records requests" or "run the monthly NextRequest filings for August." Requires browser tools, a signed-in NextRequest session, and a Google Drive connector.
+
+### [nopd-frt-complaint](nopd-frt-complaint/)
+
+Works through a redacted NOPD ↔ Project NOLA email production one thread at a time and turns each qualifying thread into a misconduct complaint. A thread qualifies only when an NOPD officer, writing from a `@nola.gov` address, asked Project NOLA to identify, track, or look out for a *person* (vehicle-only searches and Lagarde-initiated outreach don't count). It verifies every name, item number, timestamp, and page range against the PDF, drafts the complaint email with a fixed subject line and standard opening, and writes a separate analysis file with caveats and an evidence index. It then hands you the draft for the IPM, OIG, and PIB. Nothing is sent without your confirmation. It keeps a running log of filed, rejected, and outstanding threads so later sessions resume where the last one stopped, and for productions of thousands of pages it builds a candidate index first.
+
+**Use it:** ask Claude "find the next thread in 26-651" or "draft a complaint on pages 52–58." Requires the production PDF on disk and `pdftotext` (poppler) or Python `pypdf`; a mail connector is optional.
 
 ### [monthly-surveillance-recap](monthly-surveillance-recap/)
 
