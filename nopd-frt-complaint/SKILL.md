@@ -42,6 +42,11 @@ pdfinfo <file>.pdf | grep Pages
 for p in $(seq <start> <end>); do echo "=== $p ==="; pdftotext -f $p -l $p <file>.pdf - | head -8; done
 ```
 
+`pdfinfo`/`pdftotext` come from poppler, which isn't always installed. If they're missing,
+`pypdf` does the same job — `len(PdfReader(f).pages)` for the count and
+`reader.pages[p-1].extract_text()` per page (note the zero-based index; cite one-based page
+numbers).
+
 Threads run across several pages (the header page, image pages, quoted-reply pages).
 Establish the full page range of a thread before writing it up.
 
@@ -272,8 +277,10 @@ present. Something like:
 ```bash
 for p in $(seq 1 <last>); do
   hdr=$(pdftotext -f $p -l $p <file>.pdf - | head -12)
-  echo "$hdr" | grep -qi "projectnola@gmail.com" || continue
-  echo "=== p$p ==="; echo "$hdr"
+  # NOPD-sent pages list Project NOLA on the To: line; Lagarde-sent pages show "From: ProjectNOLA"
+  echo "$hdr" | grep -qiE "^To:.*projectnola@gmail\.com" || continue
+  echo "=== p$p $(echo "$hdr" | grep -q '^Attachments:' && echo '[ATTACHMENTS]') ==="
+  echo "$hdr"
 done
 ```
 
@@ -285,20 +292,31 @@ number, and rejections get recorded against index entries with reasons.
 Only after he picks an entry do you read that thread in full and run Steps 4 onward.
 
 Two cautions. Header-block extraction misses image-only pages, which in these productions
-sometimes carry the header — so treat the index as a candidate list, not a complete one,
-and say so. And a single production spanning years will contain officers already filed on;
+sometimes carry the header (the Lane thread at 26-651 p1–3 is one) — so treat the index as
+a candidate list, not a complete one, and say so. And a single production spanning years will contain officers already filed on;
 cross-check the index against the filing history in memory before presenting it.
 
 ## Reference — known context
 
-- **Ordinance:** New Orleans Chapter 147 / S147, the 2022 facial recognition restriction
+- **Ordinance:** New Orleans City Code Chapter 147, "Surveillance Technology and Data
+  Protection" (Matt cites it as S147). Enacted December 2020 with outright bans on facial
+  recognition, characteristic recognition and tracking software, predictive policing, and
+  cell-site simulators; amended in 2022 (§147-2(d), effective Oct 1 2022) to let NOPD request
+  facial recognition searches through Louisiana State Police for a listed set of violent
+  crimes. A 2025 proposal to authorize live facial recognition was withdrawn. Check the
+  current text on Municode before citing a specific subsection.
 - **Prior complaints:** PIB case 2025-0366-P (70+ complaints), 2025-0608-P, 2026-0046-O
-- **Productions in hand:** `25-20667_Redacted.pdf` (~1,985 pages, produced Nov 14 2025,
-  content Mar 2023 – Nov 6 2025); `26-651_Redacted.pdf` (69 pages, Nov 2025 correspondence)
+- **Productions in hand:** `25-20667_Redacted.pdf` (1,985 pages, produced Nov 14 2025;
+  top-level emails Nov 7 2024 – Nov 6 2025, with quoted history reaching back to Mar 2023);
+  `26-651_Redacted.pdf` (69 pages, Nov 1–30 2025 correspondence)
+- **Complaint template doc:**
+  https://docs.google.com/document/d/1l8la3w0mCclXj1Hzf0qo8gpCCA1NMBNq4ucogfSYoJI
+  (Google returns a sign-in wall to `web_fetch` — ask him to paste the text if you need
+  more than the opening paragraph reproduced above)
 
-### 26-651 — worked to completion (Aug 2026)
+### 26-651 — worked p4–69 (Aug 2026); p1–3 outstanding
 
-Filed: p15 Det. Brody Bonura (Signal 64, Nov 22); p20–21 Det. Shanay T. Howard
+Filed: p15 Det. Brody Bonura (Signal 64, Nov 22; full thread p5–15); p20–21 Det. Shanay T. Howard
 (K-18130-25, Nov 19); p29–36 Det. Nico A. D'Alessandro Sr. (K-05861-25, Nov 6);
 p50 Det. John R. Huntington (K-04___-25, Nov 6); p60–61 & 64–65 Det. Raionda J. Edgerson
 (K-01668-25, Nov 4); p67–69 Det. Brody Bonura again (K-00107-25, Nov 1).
@@ -306,27 +324,38 @@ p50 Det. John R. Huntington (K-04___-25, Nov 6); p60–61 & 64–65 Det. Raionda
 Already covered by an earlier complaint, do not re-file: p37–42 & 45–49 Det. Donald L.
 Willyard (J-29501-25, Nov 6).
 
-Rejected: p16–18 Spanish Plaza camera demo; p22 Business Burglary; p23–24 and p62–63
+Rejected: p16–19 Spanish Plaza camera demo; p22 Business Burglary; p23–24 and p62–63
 Lagarde-initiated to Sgt. Barrere; p25–26 Claiborne and Jackson; p27–28 Apartments Footage
 Request; p43–44 and p51 vehicle-only; p55–56 fixed-window footage pull; p59
 Lagarde-initiated to Det. Carroll.
 
+Not in the log, no qualifying request: p4 "Fire" (Nov 27) — Lagarde sends Det. Sgt. Cherny
+a Drive footage link, and the request it answers isn't in the production; p66 Outlook
+delivery receipt for Lagarde's "Bourbon Street Vehicle Intrusion Detection System" email.
+
 **Still unfiled:** p52–54 and 57–58, Det. Lucretia Gantner, Nov 5 2025 — the account-access
 thread. She asks to have her Project NOLA account restored while acknowledging accounts
 "have been frozen"; Lagarde reactivates it on his own assessment of "emergency
-circumstances," adds cameras she didn't ask for, and references a visit from Supt.
-Kirkpatrick. It is the only thread in the production about standing access rather than a
-single search, and structurally the largest allegation left. Matt has passed over it twice
-without saying why; offer it once more, then stop pushing.
+circumstances," then adds the Philip St cameras she says she can't see "plus some others,"
+and references a visit from Supt. Kirkpatrick. It is the only thread in the production about
+standing access rather than a single search, and structurally the largest allegation left.
+Matt has passed over it twice without saying why; offer it once more, then stop pushing.
+
+**Not yet reviewed:** p1–3 (image-only; render to read), Det. Michael P. Lane, 8th District
+Persons Crimes, "67P case," Nov 30 2025 — the most recent thread in the production. Lane emails
+`projectnola@gmail.com` from `mplane@nola.gov` with a `.jpg` attachment and three `.avi` clip
+links, reporting he "found the footage, downloaded it, and promptly found the suspect in the
+white shirt at Bourbon and Canal ... All from my desk"; Lagarde replies "GREAT WORK!!!" It is
+NOPD-sent and about a person, but it reports the officer's own search of the footage rather
+than asking Project NOLA to run one. It may go to the standing-access pattern, 25 days after
+Gantner was told accounts were frozen. That's a borderline call, so put it to Matt.
 
 ### Recurring names
 
-8th District Persons Crimes (334 Royal St) accounts for most of the correspondence:
-Bonura, D'Alessandro, Cherny, Howard, Huntington. ISB/Homicide (1615 Poydras): Willyard,
-Barrere, Stewart, Marshall. Others seen once: Edgerson (3rd District), Gantner and Dulaney
-(6th District), Brown (1st District), Singleton (5th District), Lane, Carroll, Henderson.
-The unit concentration supports asking for unit-level rather than officer-level findings.
-- **Complaint template doc:**
-  https://docs.google.com/document/d/1l8la3w0mCclXj1Hzf0qo8gpCCA1NMBNq4ucogfSYoJI
-  (Google returns a sign-in wall to `web_fetch` — ask him to paste the text if you need
-  more than the opening paragraph reproduced above)
+The 8th District (334 Royal St) accounts for most of the correspondence: Persons Crimes —
+Bonura, D'Alessandro, Cherny, Huntington, Lane; Property Crimes — Howard. ISB/Homicide:
+Willyard and Barrere (1615 Poydras), Stewart (signature gives 715 S. Broad), Marshall (cc'd
+on the Willyard thread only). Others seen once: Edgerson (3rd District), Gantner and Dulaney
+(6th District), Brown (1st District), Singleton (5th District), Carroll and Henderson (unit
+not stated). The unit concentration supports asking for unit-level rather than
+officer-level findings.
