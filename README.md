@@ -30,7 +30,13 @@ Works through a redacted NOPD ↔ Project NOLA email production one thread at a 
 
 **Use it:** ask Claude "find the next thread in 26-651" or "draft a complaint on pages 52–58." Requires the production PDF on disk and `pdftotext` (poppler) or Python `pypdf`; a mail connector is optional.
 
-### [monthly-surveillance-recap](monthly-surveillance-recap/)
+### [monthly-nopd-surveillance-report](monthly-nopd-surveillance-report/)
+
+Writes the release post for a finished NOPD ↔ Project NOLA records production — one production, one post, distinct from both the per-thread complaints (`nopd-frt-complaint`) and the monthly recap (`monthly-work-recap`). Deconflicts against three sources (sent mail, the Drive complaints folder, and the blog) before drafting so it never describes a complaint as new when it was already filed or already written up, verifies the document's true date span and every count against the PDF, then drafts a short, link-dense post naming what NOPD did, one bullet per filed thread, and hands it over with exactly one placeholder left (the production PDF link).
+
+**Use it:** ask Claude to write the release post for a finished production (e.g. "write the release post for 26-651"). Requires the production PDF, a Google Drive folder listing (via Claude in Chrome — the Drive MCP connector can't enumerate it), and ideally a mail connector to check for complaints already filed.
+
+### [monthly-work-recap](monthly-work-recap/)
 
 Writes a monthly "[Month] [Year] in Review" recap post for a surveillance-accountability blog. Gathers everything the month left a trace of — WordPress posts, NextRequest filings and agency responses, complaint PDFs in Drive, Instagram posts, and repo commits — then drafts a short, chronological, link-dense post and runs a verification pass over every date, number, and case ID before anything is published.
 

@@ -1,0 +1,180 @@
+---
+name: "nopd-production-release-post"
+description: "Write the insomniac.tech release post for a worked NOPD ↔ Project NOLA records production — date span, what's in it, what NOPD did, and every complaint filed from it — after checking email, the Drive complaints folder, and the blog for what already exists. Use when Matt says a production is done and wants it summarized or shared, or asks for a blog post about a production (e.g. 26-650, 26-651)."
+---
+
+# Production release post
+
+When Matt finishes working a records production (one complaint per qualifying thread, via
+`nopd-frt-complaint`), he publishes a short post whose whole purpose is to **share the
+document and the complaints derived from it**. This skill produces that post.
+
+It is not the monthly "[Month] in Review" recap (that is `monthly-surveillance-recap`) and
+it is not a per-thread complaint (that is `nopd-frt-complaint`). One production → one post.
+
+**Read the published example before drafting:**
+https://insomniac.tech/2026/09/15/nopd-mass-surveillance-october-2025/ — the 26-650
+release post as it went live. That is the target shape, length, voice and link density.
+Match it.
+
+The post is only as good as its deconfliction. Every thread it describes must be matched
+against what has already been filed and already been written, from three sources, before
+a word is drafted. Skipping that is how a post ends up describing a complaint as new when
+it was filed months ago, or re-telling a story he already published.
+
+## Step 1 — Establish what the production is
+
+Read `/areas/project-mayhem.md` first. It carries the per-production filing record: which
+pages were filed, which were rejected and why, and which threads were "already covered by
+an earlier complaint." If the production hasn't been worked to completion, stop and run
+`nopd-frt-complaint` first — this post summarizes finished work.
+
+Then verify the document itself rather than trusting memory:
+
+```bash
+pdfinfo <file>.pdf | grep Pages
+# every header-block Date: line, to get the true span
+for p in $(seq 1 <last>); do pdftotext -f $p -l $p <file>.pdf - | head -12 | grep -E '^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday), ' ; done | sort -u
+```
+
+Record the earliest and latest header dates. Threads often quote older messages beneath
+them (a September or August exchange under an October reply) — the post should say the
+emails *run* from X to Y and that some quote older material, not claim the older dates as
+the span.
+
+Build the classification the post will be organized around:
+
+- **Filed** — qualifying person-search threads with a complaint (officer, subject line,
+  initiating-email date, page range, the one quote that carries it)
+- **Already covered** — qualifying threads Matt says were filed from an earlier document
+- **Rejected** — fixed-camera pulls, vehicle-only, Lagarde-initiated, reply-only
+- **Significant but not a complaint** — command-level contact (Kirkpatrick), credential
+  handovers (Bourgeois/SafeCam), PIB correspondence about Matt's own complaints
+  (Contreras), standing-access threads already under another PIB case number
+
+Count, for the post: total threads filed, how many targeted **victims or complainants**
+rather than suspects, how many came from one unit, which officers appear more than once,
+and how many threads carry **no NOPD item number**. These are the numbers the title and
+the closing turn on, so verify each against the pages, not the memory file.
+
+## Step 2 — Deconflict against three sources
+
+Do all three. Report what each returned before drafting.
+
+**A. His email.** Search sent mail for complaints whose subject-line date falls in the
+production's calendar month: `subject:"Complaint against" to:nopdpib@nola.gov`, then
+read the parenthetical date in each subject — that is the initiating-email date, and it is
+what maps a complaint to a production thread. Note the send date of each (the Gmail
+timestamp is authoritative; Drive "modified" dates are not). If no mail connector is
+available in the session, say so and ask him to confirm the list rather than assuming.
+
+**B. The Drive complaints folder.** "Initial Complaint Emails,"
+`https://drive.google.com/drive/folders/1mHbZJrOvf7quzMeScyH_mDG6LJqD_ohJ`.
+
+The Google Drive MCP connector **cannot enumerate this folder** — it is signed in as the
+gmail account and the folder is owned by mjw@insomniac.tech; `search_files` returns `{}`
+even for files that exist. `get_file_metadata` works on an ID you already have, but you
+won't have the IDs. Use Claude in Chrome instead: open the folder URL in a new tab, wait
+for the grid, and read file rows from `aria-label` attributes (the DOM has no useful text
+layer, and `get_page_text` returns nothing):
+
+```js
+const map={};
+for(const e of document.querySelectorAll('[aria-label]')){
+  const v=e.getAttribute('aria-label');
+  if(v&&/Complaint against/i.test(v)){
+    const id=e.getAttribute('data-id')||(e.closest('[data-id]')&&e.closest('[data-id]').getAttribute('data-id'));
+    if(id)map[id]=v.replace(/ PDF( Shared)?$/,'');
+  }
+}
+Object.entries(map).map(([id,n])=>id+' | '+n).join('\n')
+```
+
+Filter the regex to the officer names and month you need — the full list truncates. Don't
+scroll-loop with long `await`s inside the JS; it hangs the renderer. Close the tab when
+done.
+
+Filenames follow `Insomniac Technologies Mail - Complaint against <Rank. First M. Last>
+(<Month D, YYYY>).pdf` for current filings and `MJW — Insomniac Technologies Mail - NOPD
+PIB Complaint against <names>.pdf` for the older 2025-0366-P batch. Link format:
+`https://drive.google.com/file/d/<id>/view?usp=drive_link`.
+
+A thread Matt says was "filed using a previous document" will usually have **no file in
+the folder bearing its date** — it lives inside one of the older, differently-named PDFs.
+Do not guess which one and do not link it. The post says it was already the subject of an
+earlier complaint and moves on.
+
+**C. The blog.** Check `https://www.insomniac.tech/blog` and
+`https://www.insomniac.tech/projectmayhem` for posts already written about threads in
+this production. Any thread that already has its own post gets **linked and highlighted**
+in the release post, not re-told — one bold line naming the post title with the URL. He
+will usually tell you the URL; if he pastes a folder link instead of a post link, ask.
+
+While there, confirm no release post for this production already exists. The 26-650 one
+is https://insomniac.tech/2026/09/15/nopd-mass-surveillance-october-2025/.
+
+## Step 3 — Draft the post
+
+Short. 700–900 words. The reader is there to download the PDF and read the complaints;
+the post is a map, not a second analysis. Deliver as a markdown file; never publish.
+
+**Title.** A concrete fact, not a label. The first draft's "One Month of NOPD Emails to
+Project NOLA: The 26-650 Production" was sent back. What worked: *"NOPD Asked Project
+NOLA to Find People Seven Times in October 2025. Three Times, It Was the Victim."* — the
+count, the month, and the single most damning verified number. Check every number in the
+title against the pages.
+
+**Structure:**
+
+1. **Lede** — two sentences: what the production is (request number, page count, who is
+   writing to whom), and what Project NOLA is.
+2. **`[PLACEHOLDER — link to <production>_Redacted.pdf on Google Drive]`** on its own
+   bold line. He uploads the PDF after; leave this for him.
+3. One line linking the complaints folder.
+4. **What's in it** — the verified date span; one paragraph on the character of the
+   contents ("most of it is one thing repeated"), naming the non-complaint threads that a
+   reader should know are there (command contact, credential handovers, PIB
+   correspondence). Keep the line: officers never write the words "facial recognition";
+   they send a face and a time window to an organization that scans faces.
+5. **What NOPD did** — one bullet per filed thread. Officer in bold, one sentence of what
+   he did, the single operative quote, then `[Complaint.](<drive link>)`. Repeat officers
+   get folded into one bullet ("He'd done the same thing eighteen days earlier...").
+   Already-covered threads get the sentence and "already the subject of an earlier
+   complaint" — no link, no placeholder.
+6. **The derived post**, if one exists — a bold standalone line: *"The <X> thread is the
+   worst thing in the file, and I wrote it up on its own: [title](url)."*
+7. **The aggregate line** — victims vs. suspects, unit concentration, repeat officers.
+8. **The complaints** — one sentence on the three recipients, the folder link, then a
+   table: Officer | Thread | Date. No links in the table; the bullets carry them.
+9. **Item numbers** — "N of the M threads carry no NOPD item number at all."
+10. **Close** — "This is one month, from one records request. Download the production,
+    read the emails, and check my work."
+
+Don't name or further describe uncharged private individuals who appear in the threads
+beyond what the point requires.
+
+## Step 4 — Fact-check before handing it over
+
+Run his standing rule: scan the draft for every factual claim and verify it. Confirm
+directly against the PDF: the date span, every quote, every officer name and unit, every
+count in the title and aggregate line, and the item-number tally. Confirm every Drive link
+resolves to the file whose name matches the bullet.
+
+Then flag, in chat, the claims that came from **his** prior reporting rather than this
+production — typically the camera count and the "live facial recognition" characterization
+of Project NOLA, and any statement about what the ordinance was "written to" do. Tell him
+to phrase those however he currently stands behind publicly. Don't soften them yourself.
+
+List the placeholders that remain. There should be exactly one: the production PDF.
+
+## Reference
+
+- Complaints folder: `1mHbZJrOvf7quzMeScyH_mDG6LJqD_ohJ` ("Initial Complaint Emails")
+- Three recipients on every complaint: policemonitor@nolaipm.gov, hotline@nolaoig.gov,
+  nopdpib@nola.gov
+- Blog: https://www.insomniac.tech/blog and https://www.insomniac.tech/projectmayhem
+- **Published example of this post:**
+  https://insomniac.tech/2026/09/15/nopd-mass-surveillance-october-2025/ (26-650,
+  80 pages, Oct 3–31 2025 → seven threads filed or covered, five rejected)
+- Derived single-thread post from that production:
+  https://insomniac.tech/2026/09/12/nopd-ran-facial-recognition-on-a-robbery-victim/
