@@ -36,6 +36,12 @@ Writes the release post for a finished NOPD ↔ Project NOLA records production 
 
 **Use it:** ask Claude to write the release post for a finished production (e.g. "write the release post for 26-651"). Requires the production PDF, a Google Drive folder listing (via Claude in Chrome — the Drive MCP connector can't enumerate it), and ideally a mail connector to check for complaints already filed.
 
+### [nopd-pib-case-tracker](nopd-pib-case-tracker/)
+
+Builds or refreshes a Google Sheet that maps every NOPD Public Integrity Bureau (PIB) case number to its officers, investigator, open/closed status, disposition, filing PDF, and filing date. It sweeps Gmail for PIB threads and sent complaints, reads each closing letter (from Drive or as a Gmail attachment, including image-only PDFs) to get the per-officer findings, and matches filings to cases, marking each match Direct or Inferred. Discrepancies like reclassified suffixes or conflicting numbers go in Notes instead of being resolved silently. It then writes a three-tab workbook (Filings, Cases, Sources & method), checks every Drive link, and imports the workbook over the existing sheet so the URL stays the same. It never emails PIB or anyone else.
+
+**Use it:** ask Claude "refresh the PIB tracker" or "which of my PIB complaints are still open?" Requires Claude in Chrome with signed-in Gmail, Drive, and Sheets sessions, a Google Drive connector, and Python `openpyxl`.
+
 ### [monthly-work-recap](monthly-work-recap/)
 
 Writes a monthly "[Month] [Year] in Review" recap post for a surveillance-accountability blog. Gathers everything the month left a trace of — WordPress posts, NextRequest filings and agency responses, complaint PDFs in Drive, Instagram posts, and repo commits — then drafts a short, chronological, link-dense post and runs a verification pass over every date, number, and case ID before anything is published.
