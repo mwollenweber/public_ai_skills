@@ -44,6 +44,6 @@ Builds or refreshes a Google Sheet that maps every NOPD Public Integrity Bureau 
 
 ### [monthly-work-recap](monthly-work-recap/)
 
-Writes a monthly "[Month] [Year] in Review" recap post for a surveillance-accountability blog. Gathers everything the month left a trace of — WordPress posts, NextRequest filings and agency responses, complaint PDFs in Drive, Instagram posts, and repo commits — then drafts a short, chronological, link-dense post and runs a verification pass over every date, number, and case ID before anything is published.
+Writes a monthly "[Month] [Year] in Review" recap post for a surveillance-accountability blog. Gathers everything the month left a trace of — WordPress posts, NextRequest filings and agency responses, complaint PDFs in Drive, PIB adjudications from the case tracker, Instagram posts, and repo commits — then drafts a chronological, link-dense post with a "by the numbers" metrics table (complaints filed and adjudicated, requests filed, productions received, meetups, posts, videos) and a petition ask, and runs a verification pass over every date, number, and case ID before staging it as a WordPress draft.
 
 **Use it:** ask Claude "write my August in review" or "draft the monthly recap." Requires browser tools with signed-in sessions for NextRequest, Google Drive, Instagram, and WordPress.
